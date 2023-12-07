@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  qraph-ql:
+    build:
+      context: ../../graph-ql
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - '4000:4000'
+    volumes:
+      - ../../graph-ql/src:/app/src
+    networks:
+      - star-net
+networks:
+  star-net:
