@@ -1,62 +1,71 @@
-import {
-  AugmentedRequest,
-  RESTDataSource,
-  RequestDeduplicationPolicy,
-  RequestOptions,
-} from '@apollo/datasource-rest'
+import { RESTDataSource } from '@apollo/datasource-rest'
 import DataLoader from 'dataloader'
-
-type PresonURL = `https://swapi.dev/api/person/${number}`
+import {
+  SwapiAllowedPath,
+  ValidUrl,
+  ValidSwapiResponse,
+  FilmURL,
+  PersonURL,
+} from '../schema/types'
 
 class Api extends RESTDataSource {
   override baseURL = 'https://swapi.dev/api/'
 
-  async getFilm(id?: string | number) {
-    console.log('Fetching film with id: ', id)
-    const data = await this.get(`films/${encodeURIComponent(id!)}`)
-    return data
-  }
-  // async getPerson(): Promise<any[]>
-  async getPerson(id?: PresonURL | number): Promise<any | null> {
+  async swapiGet(
+    path: SwapiAllowedPath,
+    id?: ValidUrl | number
+  ): Promise<ValidSwapiResponse | ValidSwapiResponse[] | null> {
     let results
     try {
-      if (!id) results = (await this.get('people/')) ?? null
-      if (typeof id === 'number') {
-        results = (await this.get(`people/${encodeURIComponent(id)}`)) ?? null
+      if (!id) {
+        console.log(`Fetching all ${path}`)
+        results = (await this.get(`${path}/`)).results ?? null
+      } else if (typeof id === 'number') {
+        console.log(`Fetching ${path} with id: ${id}`)
+        results = (await this.get(`${path}/${encodeURIComponent(id)}`)) ?? null
       } else if (typeof id === 'string') {
         const regex = /(\d+)(\/)$/
         const idNumber = id.match(regex)?.[1]
+        console.log(`Fetching ${path} with id: ${idNumber}`)
         results = idNumber
-          ? (await this.get(`people/${encodeURIComponent(idNumber)}`)) ?? null
+          ? (await this.get(`${path}/${encodeURIComponent(idNumber)}`)) ?? null
           : null
       }
+      if (results.results) return results.results
       return results
     } catch (error) {
       return null
     }
   }
 
-  personLoader = new DataLoader((keys: any) => {
-    return Promise.all(keys.map((key: any) => this.getPerson(key as any)))
+  personsLoader = new DataLoader((keys: any) => {
+    return Promise.all(
+      keys.map((key: PersonURL) => this.swapiGet('people', key))
+    )
   })
-
-  async getFilmByURL(url: string) {
-    const regex = /(\d+)(\/)$/
-    const id = url.match(regex)?.[1]
-    if (id) {
-      console.log('Fetching film with id: ', id)
-      const data = await this.get(`films/${encodeURIComponent(id)}`)
-      return data
-    } else {
-      return null
-    }
-  }
-  async getMovies() {
-    console.log('Fetching all the movies')
-    const data = await this.get(`${encodeURIComponent('films')}`)
-
-    return data.results
-  }
+  filmsLoader = new DataLoader((keys: any) => {
+    return Promise.all(keys.map((key: FilmURL) => this.swapiGet('films', key)))
+  })
+  planetsLoader = new DataLoader((keys: any) => {
+    return Promise.all(
+      keys.map((key: FilmURL) => this.swapiGet('planets', key))
+    )
+  })
+  starshipsLoader = new DataLoader((keys: any) => {
+    return Promise.all(
+      keys.map((key: FilmURL) => this.swapiGet('starships', key))
+    )
+  })
+  vehiclesLoader = new DataLoader((keys: any) => {
+    return Promise.all(
+      keys.map((key: FilmURL) => this.swapiGet('vehicles', key))
+    )
+  })
+  speciesLoader = new DataLoader((keys: any) => {
+    return Promise.all(
+      keys.map((key: FilmURL) => this.swapiGet('species', key))
+    )
+  })
 }
 
 export { Api as StarWarsApi }

@@ -20,17 +20,11 @@ const server = new ApolloServer<ContextValue>({
   plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
 })
 
-// Ensure we wait for our server to start
 await server.start()
-
-// Set up our Express middleware to handle CORS, body parsing,
-// and our expressMiddleware function.
 app.use(
   '/',
   cors<cors.CorsRequest>(),
   express.json(),
-  // expressMiddleware accepts the same arguments:
-  // an Apollo Server instance and optional configuration options
   expressMiddleware(server, {
     context: async () => {
       return {
@@ -40,6 +34,5 @@ app.use(
   })
 )
 
-// Modified server startup
 await new Promise<void>((resolve) => httpServer.listen({ port: 4000 }, resolve))
 console.log(`🚀 Server ready at http://localhost:4000/`)

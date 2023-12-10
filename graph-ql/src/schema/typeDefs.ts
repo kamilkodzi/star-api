@@ -114,5 +114,9 @@ type Person {
     films: [Film]
     film(id: Int!): Film
     person(id: Int!): Person
+    species(id:Int!): Species
+    vehicles(id:Int!): Vehicle
+    starships(id:Int!): Starship
+    planets(id:Int!): Planet
   }
 `

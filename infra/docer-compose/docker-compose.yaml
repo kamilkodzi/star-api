@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   qraph-ql:
+    image: kamilkodzi/graph-ql
     build:
       context: ../../graph-ql
       dockerfile: Dockerfile
